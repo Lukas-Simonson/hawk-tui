@@ -28,7 +28,7 @@ func RenderCommitPopup(message string, width, height int) string {
 	// Show the message with cursor
 	content.WriteString(message + "▌\n\n")
 
-	content.WriteString(styles.Help.Render("Ctrl+Enter: Commit  •  Esc: Cancel"))
+	content.WriteString(styles.Help.Render("Ctrl+S: Commit  •  Esc: Cancel"))
 
 	// Render the popup with a box
 	popup := styles.Box.

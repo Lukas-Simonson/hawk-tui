@@ -37,3 +37,8 @@ type DiffMsg struct {
 type CommandOutputMsg struct {
 	Output string
 }
+
+type CommitRequest struct {
+	Message string
+	Flags   string
+}

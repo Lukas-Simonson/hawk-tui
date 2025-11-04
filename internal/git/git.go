@@ -144,6 +144,31 @@ func ExecuteCommand(input string) types.CommandOutputMsg {
 	return types.CommandOutputMsg{Output: result}
 }
 
+// ExecuteCommit executes a git commit with the given message and flags
+func ExecuteCommit(message string, flags string) types.CommandOutputMsg {
+	// Build args array properly
+	args := []string{"commit"}
+
+	// Add flags if present
+	if flags != "" {
+		flagParts := strings.Fields(flags)
+		args = append(args, flagParts...)
+	}
+
+	// Add message flag and message
+	args = append(args, "-m", message)
+
+	cmd := exec.Command("git", args...)
+	output, err := cmd.CombinedOutput()
+
+	result := string(output)
+	if err != nil {
+		result += fmt.Sprintf("\nError: %v", err)
+	}
+
+	return types.CommandOutputMsg{Output: result}
+}
+
 // FilterDiffHeaders removes git diff metadata while preserving color codes
 func FilterDiffHeaders(diffOutput string) string {
 	lines := strings.Split(diffOutput, "\n")

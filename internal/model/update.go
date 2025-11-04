@@ -264,6 +264,76 @@ func (m Model) updateDiff(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// parseCommitMessage extracts the commit message and other flags from a commit command
+// Example: "-a -m "my message"" -> ("my message", "-a")
+func (m Model) parseCommitMessage(input string) (message string, flags string) {
+	// Find the -m flag
+	mIndex := strings.Index(input, "-m")
+	if mIndex == -1 {
+		// Try --message
+		mIndex = strings.Index(input, "--message")
+		if mIndex == -1 {
+			return "", input
+		}
+		mIndex += len("--message")
+	} else {
+		mIndex += len("-m")
+	}
+
+	// Extract flags before -m
+	flagsBefore := strings.TrimSpace(input[:mIndex-len("-m")])
+
+	// Find the message after -m
+	rest := strings.TrimSpace(input[mIndex:])
+	if rest == "" {
+		return "", flagsBefore
+	}
+
+	// Check if message is quoted
+	if rest[0] == '"' {
+		// Find closing quote, handling escaped quotes
+		endIdx := 1
+		for endIdx < len(rest) {
+			if rest[endIdx] == '"' && (endIdx == 1 || rest[endIdx-1] != '\\') {
+				message = rest[1:endIdx]
+				// Get any flags after the message
+				flagsAfter := strings.TrimSpace(rest[endIdx+1:])
+				if flagsAfter != "" {
+					if flagsBefore != "" {
+						flags = flagsBefore + " " + flagsAfter
+					} else {
+						flags = flagsAfter
+					}
+				} else {
+					flags = flagsBefore
+				}
+				return message, flags
+			}
+			endIdx++
+		}
+		// No closing quote found, return empty
+		return "", flagsBefore
+	}
+
+	// Not quoted, take until next space or flag
+	parts := strings.Fields(rest)
+	if len(parts) > 0 {
+		message = parts[0]
+		if len(parts) > 1 {
+			flagsAfter := strings.Join(parts[1:], " ")
+			if flagsBefore != "" {
+				flags = flagsBefore + " " + flagsAfter
+			} else {
+				flags = flagsAfter
+			}
+		} else {
+			flags = flagsBefore
+		}
+	}
+
+	return message, flags
+}
+
 // updateCommand handles updates for the command section
 func (m Model) updateCommand(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
@@ -276,16 +346,28 @@ func (m Model) updateCommand(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			input := strings.TrimSpace(m.CommandInput)
 			if strings.HasPrefix(input, "commit") {
 				// Extract flags after "commit" (e.g., commit -a, commit --amend)
-				flags := strings.TrimPrefix(input, "commit")
-				flags = strings.TrimSpace(flags)
+				rest := strings.TrimPrefix(input, "commit")
+				rest = strings.TrimSpace(rest)
 
-				// If flags contain -m or --message, let it execute normally
-				if strings.Contains(flags, "-m") || strings.Contains(flags, "--message") {
-					return m, m.ExecuteCommand()
+				// Check if flags contain -m or --message
+				if strings.Contains(rest, "-m") || strings.Contains(rest, "--message") {
+					// Parse the message from the command
+					message, flags := m.parseCommitMessage(rest)
+					if message != "" {
+						m.CommandInput = ""
+						return m, func() tea.Msg {
+							return git.ExecuteCommit(message, flags)
+						}
+					}
+					// If parsing failed, show popup
+					m.CommitFlags = flags
+					m.CommitMessage = ""
+					m.FocusSection = types.FocusCommitPopup
+					return m, nil
 				}
 
 				// Otherwise, show the commit popup
-				m.CommitFlags = flags
+				m.CommitFlags = rest
 				m.CommitMessage = ""
 				m.FocusSection = types.FocusCommitPopup
 				return m, nil
@@ -337,15 +419,11 @@ func (m Model) updateCommitPopup(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.CommandInput = ""
 		return m, nil
 
-	case "ctrl+enter":
+	case "ctrl+s":
 		// Execute commit with the message
 		if m.CommitMessage != "" {
-			// Build the commit command
-			commitCmd := "commit"
-			if m.CommitFlags != "" {
-				commitCmd += " " + m.CommitFlags
-			}
-			commitCmd += " -m \"" + strings.ReplaceAll(m.CommitMessage, "\"", "\\\"") + "\""
+			message := m.CommitMessage
+			flags := m.CommitFlags
 
 			// Clear state
 			m.FocusSection = types.FocusFiles
@@ -353,9 +431,9 @@ func (m Model) updateCommitPopup(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.CommitFlags = ""
 			m.CommandInput = ""
 
-			// Execute the commit command
+			// Execute the commit command using the dedicated function
 			return m, func() tea.Msg {
-				return git.ExecuteCommand(commitCmd)
+				return git.ExecuteCommit(message, flags)
 			}
 		}
 		return m, nil
