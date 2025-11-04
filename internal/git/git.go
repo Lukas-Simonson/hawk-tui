@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"hawk-tui/internal/types"
@@ -34,6 +35,11 @@ func RefreshStatus() types.FilesMsg {
 		// First 2 chars are XY where X=staged, Y=unstaged
 		status := line[:2]
 		path := strings.TrimSpace(line[3:])
+
+		// Git quotes filenames with spaces or special characters
+		// Remove quotes and unescape if present
+		path = unquoteGitPath(path)
+
 		files = append(files, types.FileState{
 			Path:   path,
 			Status: status,
@@ -41,6 +47,21 @@ func RefreshStatus() types.FilesMsg {
 	}
 
 	return types.FilesMsg{Files: files}
+}
+
+// unquoteGitPath removes git's quoting from filenames
+func unquoteGitPath(path string) string {
+	// Git uses C-style quoting for paths with special characters
+	if len(path) >= 2 && path[0] == '"' && path[len(path)-1] == '"' {
+		// Use strconv.Unquote to properly handle escape sequences
+		unquoted, err := strconv.Unquote(path)
+		if err == nil {
+			return unquoted
+		}
+		// If unquote fails, fall back to just removing quotes
+		return path[1 : len(path)-1]
+	}
+	return path
 }
 
 // isBinaryFile checks if a file appears to be binary by looking for null bytes
