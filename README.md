@@ -1,6 +1,5 @@
 # Hawk TUI - Git Repository Viewer
 
-test
 A beautiful terminal user interface for viewing and managing git repositories, built with Go and Bubble Tea.
 
 ## Features
