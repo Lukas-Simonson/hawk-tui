@@ -395,9 +395,60 @@ func (m Model) updateCommand(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 // updateHelp handles updates for the help screen
 func (m Model) updateHelp(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	// Any key press returns to the files view
-	m.FocusSection = types.FocusFiles
-	return m, nil
+	// Calculate max scroll based on help content
+	// Help has ~60 lines, reserve 6 for title/footer
+	totalLines := 60
+	visibleLines := m.Height - 6
+	if visibleLines < 10 {
+		visibleLines = 10
+	}
+	maxScroll := totalLines - visibleLines
+	if maxScroll < 0 {
+		maxScroll = 0
+	}
+
+	// Handle scrolling keys
+	switch msg.String() {
+	case "up", "k":
+		if m.HelpScroll > 0 {
+			m.HelpScroll--
+		}
+		return m, nil
+
+	case "down", "j":
+		if m.HelpScroll < maxScroll {
+			m.HelpScroll++
+		}
+		return m, nil
+
+	case "pageup", "pgup":
+		m.HelpScroll -= 10
+		if m.HelpScroll < 0 {
+			m.HelpScroll = 0
+		}
+		return m, nil
+
+	case "pagedown", "pgdown":
+		m.HelpScroll += 10
+		if m.HelpScroll > maxScroll {
+			m.HelpScroll = maxScroll
+		}
+		return m, nil
+
+	case "g", "home":
+		m.HelpScroll = 0
+		return m, nil
+
+	case "G", "end":
+		m.HelpScroll = maxScroll
+		return m, nil
+
+	default:
+		// Any other key press returns to the files view
+		m.FocusSection = types.FocusFiles
+		m.HelpScroll = 0 // Reset scroll when closing
+		return m, nil
+	}
 }
 
 // updatePopup handles updates for the popup screen

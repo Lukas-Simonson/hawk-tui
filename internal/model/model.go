@@ -28,6 +28,7 @@ type Model struct {
 	FilesHScroll  int // Horizontal scroll offset for files pane
 	FilesVScroll  int // Vertical scroll offset for files pane
 	DiffHScroll   int // Horizontal scroll offset for diff pane
+	HelpScroll    int // Vertical scroll offset for help screen
 }
 
 // New creates a new model instance
@@ -50,7 +51,7 @@ func (m Model) Init() tea.Cmd {
 // View renders the UI
 func (m Model) View() string {
 	if m.FocusSection == types.FocusHelp {
-		return ui.RenderHelp(m.Width)
+		return ui.RenderHelp(m.Width, m.Height, m.HelpScroll)
 	}
 
 	if m.FocusSection == types.FocusPopup {
