@@ -29,6 +29,7 @@ type Model struct {
 	FilesVScroll  int // Vertical scroll offset for files pane
 	DiffHScroll   int // Horizontal scroll offset for diff pane
 	HelpScroll    int // Vertical scroll offset for help screen
+	GitHelpScroll int // Vertical scroll offset for git help screen
 }
 
 // New creates a new model instance
@@ -52,6 +53,10 @@ func (m Model) Init() tea.Cmd {
 func (m Model) View() string {
 	if m.FocusSection == types.FocusHelp {
 		return ui.RenderHelp(m.Width, m.Height, m.HelpScroll)
+	}
+
+	if m.FocusSection == types.FocusGitHelp {
+		return ui.RenderGitHelp(m.Width, m.Height, m.GitHelpScroll)
 	}
 
 	if m.FocusSection == types.FocusPopup {

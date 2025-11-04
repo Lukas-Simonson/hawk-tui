@@ -63,6 +63,7 @@ The application must be run from within a git repository.
 #### Command Section (when focused)
 - Type your git command (e.g., `add .`, `commit -m "message"`)
   - Note: `git` is automatically prepended - just type the subcommand
+- `help` - Show git command reference
 - `enter` - Execute command
 - `backspace` - Delete character
 - `esc` - Clear command input
@@ -80,16 +81,31 @@ The status column clearly shows whether changes are staged, unstaged, or both:
 - `Renamed` - File has been renamed
 - `Copied` - File has been copied
 
+### Git Command Reference
+
+Type `help` in the Command section to view a comprehensive git command reference covering:
+- Staging and unstaging changes
+- Committing (with message, amend, etc.)
+- Branch operations (create, switch, delete)
+- Remote operations (push, pull, fetch)
+- Viewing status and history
+- Stashing changes
+- Merging and rebasing
+- Undoing changes
+
+The reference is scrollable and styled with colored command names for easy reading.
+
 ## Examples
 
 1. **View repository status**: Launch the application to see all file changes in the Files pane
 2. **View file diff**: Navigate to a file with `↑`/`↓`, press `d` to toggle the diff view
 3. **Scroll through a long diff**: When diff is visible, press `tab` to focus it, then use `↑`/`↓` to scroll
 4. **Hide diff**: Press `d` again to hide the diff pane, or navigate to another file
-5. **Stage a file**: Navigate to the file, press `enter` to add its path to command, type `add ` before it, press `enter`
-6. **Quick staging**: Type `add` in command section, navigate to file in Files section, press `enter` to add the path
-7. **Commit changes**: In Command section, type `commit -m "Your message"`, press `enter`
-8. **Refresh status**: Press `r` to update the file list
+5. **View git commands**: In Command section, type `help` and press `enter` to see git command reference
+6. **Stage a file**: Navigate to the file, press `enter` to add its path to command, type `add ` before it, press `enter`
+7. **Quick staging**: Type `add` in command section, navigate to file in Files section, press `enter` to add the path
+8. **Commit changes**: In Command section, type `commit -m "Your message"`, press `enter`
+9. **Refresh status**: Press `r` to update the file list
 
 ## Requirements
 

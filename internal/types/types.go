@@ -14,6 +14,7 @@ const (
 	FocusDiff
 	FocusCommand
 	FocusHelp        // Help is an overlay
+	FocusGitHelp     // Git command reference is an overlay
 	FocusPopup       // Command output popup is an overlay
 	FocusCommitPopup // Commit message popup is an overlay
 )

@@ -12,7 +12,7 @@ func RenderCommandPane(focusSection types.FocusSection, commandInput string, wid
 	borderStyle := GetBorderStyle(IsFocused(focusSection, types.FocusCommand))
 
 	var content strings.Builder
-	content.WriteString(styles.Title.Render("⚡ Command") + "\n\n")
+	content.WriteString(styles.Title.Render("Command") + "\n\n")
 
 	// Command input
 	cursor := ""

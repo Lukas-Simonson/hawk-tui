@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"hawk-tui/internal/types"
 	"hawk-tui/internal/styles"
+	"hawk-tui/internal/types"
 
 	"github.com/charmbracelet/x/ansi"
 )
@@ -15,7 +15,7 @@ func RenderDiffPane(files []types.FileState, cursor int, focusSection types.Focu
 	borderStyle := GetBorderStyle(IsFocused(focusSection, types.FocusDiff))
 
 	var content strings.Builder
-	content.WriteString(styles.Title.Render("📝 Diff") + "\n\n")
+	content.WriteString(styles.Title.Render("Diff") + "\n\n")
 
 	if len(files) > 0 && cursor < len(files) {
 		file := files[cursor]

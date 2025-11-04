@@ -5,63 +5,82 @@ import (
 	"strings"
 
 	"hawk-tui/internal/styles"
+
+	"github.com/charmbracelet/x/ansi"
 )
+
+// formatCommand formats a command with aligned description
+// cmdWidth is the visual width to pad the command to (accounting for ANSI codes)
+func formatCommand(command string, description string, cmdWidth int) string {
+	styledCmd := styles.Command.Render(command)
+	// Calculate the visual width (without ANSI codes)
+	visualWidth := ansi.StringWidth(command)
+	// Calculate padding needed
+	padding := cmdWidth - visualWidth
+	if padding < 0 {
+		padding = 0
+	}
+	return fmt.Sprintf("  %s%s  %s", styledCmd, strings.Repeat(" ", padding), description)
+}
 
 // RenderHelp renders the help screen with vertical scrolling
 func RenderHelp(width, height, scrollOffset int) string {
 	// Build help content with styled components
 	var helpLines []string
 
+	// Fixed width for command column (visual characters, not including ANSI codes)
+	const cmdWidth = 20
+
 	helpLines = append(helpLines, "Hawk TUI - Keyboard Shortcuts")
 	helpLines = append(helpLines, "")
 	helpLines = append(helpLines, "Section Navigation:")
-	helpLines = append(helpLines, fmt.Sprintf("  %s          Cycle forward through Files → Diff → Command sections", styles.Command.Render("tab")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s    Cycle backward through sections", styles.Command.Render("shift+tab")))
+	helpLines = append(helpLines, FormatCommand("tab", "Cycle forward through Files → Diff → Command sections", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("shift+tab", "Cycle backward through sections", cmdWidth))
 	helpLines = append(helpLines, "")
 	helpLines = append(helpLines, "Files Section (when focused):")
-	helpLines = append(helpLines, fmt.Sprintf("  %s          Move cursor up (auto-loads diff)", styles.Command.Render("↑/k")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s          Move cursor down (auto-loads diff)", styles.Command.Render("↓/j")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll left (horizontal)", styles.Command.Render("←/h")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll right (horizontal)", styles.Command.Render("→/l")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s         Jump to start (horizontal)", styles.Command.Render("home")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s    Scroll page up/down", styles.Command.Render("pgup/pgdn")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s            Jump to top", styles.Command.Render("g")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s            Jump to bottom", styles.Command.Render("G")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s        Add file path to command input", styles.Command.Render("enter")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s            View diff for selected file", styles.Command.Render("d")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s            Refresh git status", styles.Command.Render("r")))
+	helpLines = append(helpLines, FormatCommand("↑/k", "Move cursor up (auto-loads diff)", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("↓/j", "Move cursor down (auto-loads diff)", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("←/h", "Scroll left (horizontal)", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("→/l", "Scroll right (horizontal)", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("home", "Jump to start (horizontal)", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("pgup/pgdn", "Scroll page up/down", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("g", "Jump to top", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("G", "Jump to bottom", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("enter", "Add file path to command input", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("d", "View diff for selected file", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("r", "Refresh git status", cmdWidth))
 	helpLines = append(helpLines, "")
 	helpLines = append(helpLines, "Diff Section (when focused):")
-	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll diff up", styles.Command.Render("↑/k")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll diff down", styles.Command.Render("↓/j")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll left (horizontal)", styles.Command.Render("←/h")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll right (horizontal)", styles.Command.Render("→/l")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s            Jump to start (horizontal)", styles.Command.Render("0")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s    Scroll page up/down", styles.Command.Render("pgup/pgdn")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s       Jump to top", styles.Command.Render("g/home")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s         Jump to bottom", styles.Command.Render("G/end")))
+	helpLines = append(helpLines, FormatCommand("↑/k", "Scroll diff up", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("↓/j", "Scroll diff down", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("←/h", "Scroll left (horizontal)", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("→/l", "Scroll right (horizontal)", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("0", "Jump to start (horizontal)", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("pgup/pgdn", "Scroll page up/down", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("g/home", "Jump to top", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("G/end", "Jump to bottom", cmdWidth))
 	helpLines = append(helpLines, "")
 	helpLines = append(helpLines, "Command Section (when focused):")
-	helpLines = append(helpLines, fmt.Sprintf("  %s       Enter git command (e.g., \"add .\", \"commit -m 'msg'\")", styles.Command.Render("[type]")))
-	helpLines = append(helpLines, "               'git' is automatically prepended - just type the subcommand")
-	helpLines = append(helpLines, fmt.Sprintf("  %s        Execute command", styles.Command.Render("enter")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s    Delete character", styles.Command.Render("backspace")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s          Clear command input", styles.Command.Render("esc")))
+	helpLines = append(helpLines, FormatCommand("[type]", "Enter git command (e.g., \"add .\", \"commit -m 'msg'\") ('git' is automatically prepended - just type the subcommand)", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("help", "Show git command reference", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("enter", "Execute command", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("backspace", "Delete character", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("esc", "Clear command input", cmdWidth))
 	helpLines = append(helpLines, "")
 	helpLines = append(helpLines, "General:")
-	helpLines = append(helpLines, fmt.Sprintf("  %s            Show/hide this help", styles.Command.Render("?")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s            Quit application", styles.Command.Render("q")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s       Quit application", styles.Command.Render("ctrl+c")))
+	helpLines = append(helpLines, FormatCommand("?", "Show/hide this help", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("q", "Quit application", cmdWidth))
+	helpLines = append(helpLines, FormatCommand("ctrl+c", "Quit application", cmdWidth))
 	helpLines = append(helpLines, "")
 	helpLines = append(helpLines, "File Status Indicators:")
-	helpLines = append(helpLines, fmt.Sprintf("  %s             Changes added to staging area", styles.StatusAdded.Render("Staged")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s           Unstaged modifications", styles.StatusModified.Render("Modified")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s  Both staged and unstaged changes", styles.StatusAdded.Render("Staged")+" +"+styles.StatusModified.Render(" Modified")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s         Deleted and staged", styles.StatusDeleted.Render("Staged-Del")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s            Deleted but not staged", styles.StatusDeleted.Render("Deleted")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s          New file not tracked by git", styles.StatusUntracked.Render("Untracked")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s            File has been renamed", styles.Command.Render("Renamed")))
-	helpLines = append(helpLines, fmt.Sprintf("  %s             File has been copied", styles.Command.Render("Copied")))
+	helpLines = append(helpLines, FormatCommand(styles.StatusAdded.Render("Staged"), "Changes added to staging area", cmdWidth))
+	helpLines = append(helpLines, FormatCommand(styles.StatusModified.Render("Modified"), "Unstaged modifications", cmdWidth))
+	helpLines = append(helpLines, FormatCommand(styles.StatusAdded.Render("Staged")+" +"+styles.StatusModified.Render(" Modified"), "Both staged and unstaged changes", cmdWidth))
+	helpLines = append(helpLines, FormatCommand(styles.StatusDeleted.Render("Staged-Del"), "Deleted and staged", cmdWidth))
+	helpLines = append(helpLines, FormatCommand(styles.StatusDeleted.Render("Deleted"), "Deleted but not staged", cmdWidth))
+	helpLines = append(helpLines, FormatCommand(styles.StatusUntracked.Render("Untracked"), "New file not tracked by git", cmdWidth))
+	helpLines = append(helpLines, FormatCommand(styles.Command.Render("Renamed"), "File has been renamed", cmdWidth))
+	helpLines = append(helpLines, FormatCommand(styles.Command.Render("Copied"), "File has been copied", cmdWidth))
 
 	helpContent := strings.Join(helpLines, "\n")
 
@@ -95,7 +114,7 @@ func RenderHelp(width, height, scrollOffset int) string {
 
 	// Build the display
 	s := styles.Title.Render("🦅 Hawk TUI - Help") + "\n"
-	s += styles.Box.Width(width - 4).Render(visibleContent) + "\n"
+	s += styles.Box.Width(width-4).Render(visibleContent) + "\n"
 
 	// Add scroll indicator if needed
 	if totalLines > visibleLines {

@@ -65,6 +65,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.updateCommand(msg)
 		case types.FocusHelp:
 			return m.updateHelp(msg)
+		case types.FocusGitHelp:
+			return m.updateGitHelp(msg)
 		case types.FocusPopup:
 			return m.updatePopup(msg)
 		case types.FocusCommitPopup:
@@ -342,8 +344,16 @@ func (m Model) updateCommand(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "enter":
 		if m.CommandInput != "" {
-			// Check if this is a commit command
 			input := strings.TrimSpace(m.CommandInput)
+
+			// Check if this is the help command
+			if input == "help" {
+				m.CommandInput = ""
+				m.FocusSection = types.FocusGitHelp
+				return m, nil
+			}
+
+			// Check if this is a commit command
 			if strings.HasPrefix(input, "commit") {
 				// Extract flags after "commit" (e.g., commit -a, commit --amend)
 				rest := strings.TrimPrefix(input, "commit")
@@ -447,6 +457,64 @@ func (m Model) updateHelp(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Any other key press returns to the files view
 		m.FocusSection = types.FocusFiles
 		m.HelpScroll = 0 // Reset scroll when closing
+		return m, nil
+	}
+}
+
+// updateGitHelp handles updates for the git help screen
+func (m Model) updateGitHelp(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Calculate max scroll based on git help content
+	// Git help has ~100 lines, reserve 6 for title/footer
+	totalLines := 100
+	visibleLines := m.Height - 6
+	if visibleLines < 10 {
+		visibleLines = 10
+	}
+	maxScroll := totalLines - visibleLines
+	if maxScroll < 0 {
+		maxScroll = 0
+	}
+
+	// Handle scrolling keys
+	switch msg.String() {
+	case "up", "k":
+		if m.GitHelpScroll > 0 {
+			m.GitHelpScroll--
+		}
+		return m, nil
+
+	case "down", "j":
+		if m.GitHelpScroll < maxScroll {
+			m.GitHelpScroll++
+		}
+		return m, nil
+
+	case "pageup", "pgup":
+		m.GitHelpScroll -= 10
+		if m.GitHelpScroll < 0 {
+			m.GitHelpScroll = 0
+		}
+		return m, nil
+
+	case "pagedown", "pgdown":
+		m.GitHelpScroll += 10
+		if m.GitHelpScroll > maxScroll {
+			m.GitHelpScroll = maxScroll
+		}
+		return m, nil
+
+	case "g", "home":
+		m.GitHelpScroll = 0
+		return m, nil
+
+	case "G", "end":
+		m.GitHelpScroll = maxScroll
+		return m, nil
+
+	default:
+		// Any other key press returns to the files view
+		m.FocusSection = types.FocusFiles
+		m.GitHelpScroll = 0 // Reset scroll when closing
 		return m, nil
 	}
 }

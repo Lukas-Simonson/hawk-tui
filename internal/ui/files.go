@@ -15,7 +15,7 @@ func RenderFilesPane(files []types.FileState, cursor int, focusSection types.Foc
 	borderStyle := GetBorderStyle(IsFocused(focusSection, types.FocusFiles))
 
 	var content strings.Builder
-	content.WriteString(styles.Title.Render("📁 Files") + "\n\n")
+	content.WriteString(styles.Title.Render("Files") + "\n\n")
 
 	if err != nil {
 		content.WriteString(styles.Error.Render(fmt.Sprintf("Error: %v", err)) + "\n\n")

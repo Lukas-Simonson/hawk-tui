@@ -1,12 +1,29 @@
 package ui
 
 import (
+	"fmt"
 	"hawk-tui/internal/styles"
 	"hawk-tui/internal/types"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
 )
+
+// FormatCommand formats a git command with aligned description
+// cmdWidth is the visual width to pad the command to (accounting for ANSI codes)
+func FormatCommand(command string, description string, cmdWidth int) string {
+	styledCmd := styles.Command.Render(command)
+	// Calculate the visual width (without ANSI codes)
+	visualWidth := ansi.StringWidth(command)
+
+	// Calculate padding needed
+	padding := cmdWidth - visualWidth
+	if padding < 0 {
+		padding = 0
+	}
+	return fmt.Sprintf("  %s%s  %s", styledCmd, strings.Repeat(" ", padding), description)
+}
 
 // ApplyHorizontalViewport applies horizontal scrolling to a line
 func ApplyHorizontalViewport(line string, scrollOffset, viewportWidth int) string {
