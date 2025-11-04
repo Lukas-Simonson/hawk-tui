@@ -82,9 +82,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case types.CommandOutputMsg:
-		m.PopupOutput = msg.Output
 		m.CommandInput = ""
-		m.FocusSection = types.FocusPopup
+		// Only show popup if there's output
+		if msg.Output != "" {
+			m.PopupOutput = msg.Output
+			m.FocusSection = types.FocusPopup
+		}
 		return m, RefreshGitStatus()
 
 	case types.ErrMsg:
