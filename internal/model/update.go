@@ -78,6 +78,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if len(m.Files) > 0 && m.Cursor >= len(m.Files) {
 			m.Cursor = len(m.Files) - 1
 		}
+		// Clear diff if there are no files
+		if len(m.Files) == 0 {
+			m.DiffContent = ""
+			return m, nil
+		}
+		// Auto-load diff for first file
+		if len(m.Files) > 0 {
+			return m, m.ShowDiff()
+		}
 		return m, nil
 
 	case types.GitStatusMsg:
