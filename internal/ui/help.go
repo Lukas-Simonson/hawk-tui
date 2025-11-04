@@ -9,56 +9,61 @@ import (
 
 // RenderHelp renders the help screen with vertical scrolling
 func RenderHelp(width, height, scrollOffset int) string {
-	helpContent := `Hawk TUI - Keyboard Shortcuts
+	// Build help content with styled components
+	var helpLines []string
 
-Section Navigation:
-  tab          Cycle forward through Files → Diff → Command sections
-  shift+tab    Cycle backward through sections
+	helpLines = append(helpLines, "Hawk TUI - Keyboard Shortcuts")
+	helpLines = append(helpLines, "")
+	helpLines = append(helpLines, "Section Navigation:")
+	helpLines = append(helpLines, fmt.Sprintf("  %s          Cycle forward through Files → Diff → Command sections", styles.Command.Render("tab")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s    Cycle backward through sections", styles.Command.Render("shift+tab")))
+	helpLines = append(helpLines, "")
+	helpLines = append(helpLines, "Files Section (when focused):")
+	helpLines = append(helpLines, fmt.Sprintf("  %s          Move cursor up (auto-loads diff)", styles.Command.Render("↑/k")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s          Move cursor down (auto-loads diff)", styles.Command.Render("↓/j")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll left (horizontal)", styles.Command.Render("←/h")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll right (horizontal)", styles.Command.Render("→/l")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s         Jump to start (horizontal)", styles.Command.Render("home")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s    Scroll page up/down", styles.Command.Render("pgup/pgdn")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s            Jump to top", styles.Command.Render("g")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s            Jump to bottom", styles.Command.Render("G")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s        Add file path to command input", styles.Command.Render("enter")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s            View diff for selected file", styles.Command.Render("d")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s            Refresh git status", styles.Command.Render("r")))
+	helpLines = append(helpLines, "")
+	helpLines = append(helpLines, "Diff Section (when focused):")
+	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll diff up", styles.Command.Render("↑/k")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll diff down", styles.Command.Render("↓/j")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll left (horizontal)", styles.Command.Render("←/h")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s          Scroll right (horizontal)", styles.Command.Render("→/l")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s            Jump to start (horizontal)", styles.Command.Render("0")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s    Scroll page up/down", styles.Command.Render("pgup/pgdn")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s       Jump to top", styles.Command.Render("g/home")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s         Jump to bottom", styles.Command.Render("G/end")))
+	helpLines = append(helpLines, "")
+	helpLines = append(helpLines, "Command Section (when focused):")
+	helpLines = append(helpLines, fmt.Sprintf("  %s       Enter git command (e.g., \"add .\", \"commit -m 'msg'\")", styles.Command.Render("[type]")))
+	helpLines = append(helpLines, "               'git' is automatically prepended - just type the subcommand")
+	helpLines = append(helpLines, fmt.Sprintf("  %s        Execute command", styles.Command.Render("enter")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s    Delete character", styles.Command.Render("backspace")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s          Clear command input", styles.Command.Render("esc")))
+	helpLines = append(helpLines, "")
+	helpLines = append(helpLines, "General:")
+	helpLines = append(helpLines, fmt.Sprintf("  %s            Show/hide this help", styles.Command.Render("?")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s            Quit application", styles.Command.Render("q")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s       Quit application", styles.Command.Render("ctrl+c")))
+	helpLines = append(helpLines, "")
+	helpLines = append(helpLines, "File Status Indicators:")
+	helpLines = append(helpLines, fmt.Sprintf("  %s             Changes added to staging area", styles.StatusAdded.Render("Staged")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s           Unstaged modifications", styles.StatusModified.Render("Modified")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s  Both staged and unstaged changes", styles.StatusAdded.Render("Staged")+" +"+styles.StatusModified.Render(" Modified")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s         Deleted and staged", styles.StatusDeleted.Render("Staged-Del")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s            Deleted but not staged", styles.StatusDeleted.Render("Deleted")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s          New file not tracked by git", styles.StatusUntracked.Render("Untracked")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s            File has been renamed", styles.Command.Render("Renamed")))
+	helpLines = append(helpLines, fmt.Sprintf("  %s             File has been copied", styles.Command.Render("Copied")))
 
-Files Section (when focused):
-  ↑/k          Move cursor up (auto-loads diff)
-  ↓/j          Move cursor down (auto-loads diff)
-  ←/h          Scroll left (horizontal)
-  →/l          Scroll right (horizontal)
-  home         Jump to start (horizontal)
-  pgup/pgdn    Scroll page up/down
-  g            Jump to top
-  G            Jump to bottom
-  enter        Add file path to command input
-  d            View diff for selected file
-  r            Refresh git status
-
-Diff Section (when focused):
-  ↑/k          Scroll diff up
-  ↓/j          Scroll diff down
-  ←/h          Scroll left (horizontal)
-  →/l          Scroll right (horizontal)
-  0            Jump to start (horizontal)
-  pgup/pgdn    Scroll page up/down
-  g/home       Jump to top
-  G/end        Jump to bottom
-
-Command Section (when focused):
-  [type]       Enter git command (e.g., "add .", "commit -m 'msg'")
-               'git' is automatically prepended - just type the subcommand
-  enter        Execute command
-  backspace    Delete character
-  esc          Clear command input
-
-General:
-  ?            Show/hide this help
-  q            Quit application
-  ctrl+c       Quit application
-
-File Status Indicators:
-  Staged             Changes added to staging area (green)
-  Modified           Unstaged modifications (yellow)
-  Staged + Modified  Both staged and unstaged changes
-  Staged-Del         Deleted and staged (red)
-  Deleted            Deleted but not staged (red)
-  Untracked          New file not tracked by git (orange)
-  Renamed            File has been renamed
-  Copied             File has been copied`
+	helpContent := strings.Join(helpLines, "\n")
 
 	// Split into lines
 	lines := strings.Split(helpContent, "\n")

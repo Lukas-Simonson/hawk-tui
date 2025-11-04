@@ -33,6 +33,10 @@ var (
 	Help = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("241"))
 
+	Command = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("117")).
+			Bold(true)
+
 	FocusedBorder = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("170")).
