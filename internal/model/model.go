@@ -13,19 +13,21 @@ import (
 
 // Model represents the application state
 type Model struct {
-	Files        []types.FileState
-	Cursor       int
-	FocusSection types.FocusSection
-	DiffContent  string
-	CommandInput string
-	PopupOutput  string // Output shown in popup overlay
-	Width        int
-	Height       int
-	Err          error
-	DiffScroll   int
-	FilesHScroll int // Horizontal scroll offset for files pane
-	FilesVScroll int // Vertical scroll offset for files pane
-	DiffHScroll  int // Horizontal scroll offset for diff pane
+	Files         []types.FileState
+	Cursor        int
+	FocusSection  types.FocusSection
+	DiffContent   string
+	CommandInput  string
+	PopupOutput   string // Output shown in popup overlay
+	CommitMessage string // Commit message being composed
+	CommitFlags   string // Additional flags for commit command
+	Width         int
+	Height        int
+	Err           error
+	DiffScroll    int
+	FilesHScroll  int // Horizontal scroll offset for files pane
+	FilesVScroll  int // Vertical scroll offset for files pane
+	DiffHScroll   int // Horizontal scroll offset for diff pane
 }
 
 // New creates a new model instance
@@ -53,6 +55,10 @@ func (m Model) View() string {
 
 	if m.FocusSection == types.FocusPopup {
 		return ui.RenderPopup(m.PopupOutput, m.Width, m.Height)
+	}
+
+	if m.FocusSection == types.FocusCommitPopup {
+		return ui.RenderCommitPopup(m.CommitMessage, m.Width, m.Height)
 	}
 
 	// Calculate dimensions for the panes

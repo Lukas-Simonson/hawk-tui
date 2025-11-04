@@ -3,6 +3,7 @@ package model
 import (
 	"strings"
 
+	"hawk-tui/internal/git"
 	"hawk-tui/internal/types"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -66,6 +67,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.updateHelp(msg)
 		case types.FocusPopup:
 			return m.updatePopup(msg)
+		case types.FocusCommitPopup:
+			return m.updateCommitPopup(msg)
 		}
 
 	case types.FilesMsg:
@@ -269,6 +272,24 @@ func (m Model) updateCommand(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "enter":
 		if m.CommandInput != "" {
+			// Check if this is a commit command
+			input := strings.TrimSpace(m.CommandInput)
+			if strings.HasPrefix(input, "commit") {
+				// Extract flags after "commit" (e.g., commit -a, commit --amend)
+				flags := strings.TrimPrefix(input, "commit")
+				flags = strings.TrimSpace(flags)
+
+				// If flags contain -m or --message, let it execute normally
+				if strings.Contains(flags, "-m") || strings.Contains(flags, "--message") {
+					return m, m.ExecuteCommand()
+				}
+
+				// Otherwise, show the commit popup
+				m.CommitFlags = flags
+				m.CommitMessage = ""
+				m.FocusSection = types.FocusCommitPopup
+				return m, nil
+			}
 			return m, m.ExecuteCommand()
 		}
 
@@ -302,5 +323,61 @@ func (m Model) updatePopup(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// Any key press closes the popup and returns to the files view
 	m.FocusSection = types.FocusFiles
 	m.PopupOutput = ""
+	return m, nil
+}
+
+// updateCommitPopup handles updates for the commit message popup
+func (m Model) updateCommitPopup(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "esc":
+		// Cancel commit
+		m.FocusSection = types.FocusFiles
+		m.CommitMessage = ""
+		m.CommitFlags = ""
+		m.CommandInput = ""
+		return m, nil
+
+	case "ctrl+enter":
+		// Execute commit with the message
+		if m.CommitMessage != "" {
+			// Build the commit command
+			commitCmd := "commit"
+			if m.CommitFlags != "" {
+				commitCmd += " " + m.CommitFlags
+			}
+			commitCmd += " -m \"" + strings.ReplaceAll(m.CommitMessage, "\"", "\\\"") + "\""
+
+			// Clear state
+			m.FocusSection = types.FocusFiles
+			m.CommitMessage = ""
+			m.CommitFlags = ""
+			m.CommandInput = ""
+
+			// Execute the commit command
+			return m, func() tea.Msg {
+				return git.ExecuteCommand(commitCmd)
+			}
+		}
+		return m, nil
+
+	case "backspace":
+		if len(m.CommitMessage) > 0 {
+			m.CommitMessage = m.CommitMessage[:len(m.CommitMessage)-1]
+		}
+
+	case "enter":
+		// Add newline
+		m.CommitMessage += "\n"
+
+	case "space":
+		m.CommitMessage += " "
+
+	default:
+		// Handle all printable characters
+		if len(msg.String()) == 1 && msg.String() >= " " && msg.String() <= "~" {
+			m.CommitMessage += msg.String()
+		}
+	}
+
 	return m, nil
 }

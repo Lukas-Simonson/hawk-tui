@@ -13,8 +13,9 @@ const (
 	FocusFiles FocusSection = iota
 	FocusDiff
 	FocusCommand
-	FocusHelp  // Help is an overlay
-	FocusPopup // Command output popup is an overlay
+	FocusHelp        // Help is an overlay
+	FocusPopup       // Command output popup is an overlay
+	FocusCommitPopup // Commit message popup is an overlay
 )
 
 // Messages for the Bubble Tea update cycle
