@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -46,7 +47,59 @@ func RefreshStatus() types.FilesMsg {
 		})
 	}
 
+	// Sort files by status priority
+	sortFilesByStatus(files)
+
 	return types.FilesMsg{Files: files}
+}
+
+// getStatusPriority returns a priority value for sorting files by status
+// Lower values appear first
+func getStatusPriority(status string) int {
+	if len(status) != 2 {
+		return 999
+	}
+
+	index := status[0]  // Staged status
+	worktree := status[1] // Working tree status
+
+	// 1. Staged unmodified (index has change, worktree is clean)
+	if index != ' ' && index != '?' && worktree == ' ' {
+		return 1
+	}
+
+	// 2. Staged and modified (index has change, worktree also has change)
+	if index != ' ' && index != '?' && worktree != ' ' && worktree != '?' {
+		return 2
+	}
+
+	// 3. Not staged (only worktree has changes)
+	if index == ' ' && worktree != ' ' && worktree != '?' {
+		return 3
+	}
+
+	// 4. Untracked
+	if status == "??" {
+		return 4
+	}
+
+	// Unknown status
+	return 999
+}
+
+// sortFilesByStatus sorts files by their git status priority, then alphabetically
+func sortFilesByStatus(files []types.FileState) {
+	sort.SliceStable(files, func(i, j int) bool {
+		priI := getStatusPriority(files[i].Status)
+		priJ := getStatusPriority(files[j].Status)
+
+		// If same priority, sort alphabetically by path
+		if priI == priJ {
+			return files[i].Path < files[j].Path
+		}
+
+		return priI < priJ
+	})
 }
 
 // unquoteGitPath removes git's quoting from filenames
