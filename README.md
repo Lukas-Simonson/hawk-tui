@@ -1,5 +1,6 @@
 # Hawk TUI - Git Repository Viewer
 
+test
 A beautiful terminal user interface for viewing and managing git repositories, built with Go and Bubble Tea.
 
 ## Features
@@ -68,12 +69,16 @@ The application must be run from within a git repository.
 
 ### File Status Indicators
 
-- `M` - Modified
-- `A` - Added (staged)
-- `D` - Deleted
-- `??` - Untracked
-- `MM` - Modified (staged and unstaged)
-- `AM` - Added then modified
+The status column clearly shows whether changes are staged, unstaged, or both:
+
+- `Staged` - Changes added to staging area (green)
+- `Modified` - Unstaged modifications (yellow)
+- `Staged + Modified` - File has both staged and unstaged changes
+- `Staged-Del` - File deleted and staged (red)
+- `Deleted` - File deleted but not staged (red)
+- `Untracked` - New file not tracked by git (orange)
+- `Renamed` - File has been renamed
+- `Copied` - File has been copied
 
 ## Examples
 

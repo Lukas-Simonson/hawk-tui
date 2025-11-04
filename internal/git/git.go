@@ -30,7 +30,9 @@ func RefreshStatus() types.FilesMsg {
 		if len(line) < 4 {
 			continue
 		}
-		status := strings.TrimSpace(line[:2])
+		// Don't trim status - spaces are meaningful!
+		// First 2 chars are XY where X=staged, Y=unstaged
+		status := line[:2]
 		path := strings.TrimSpace(line[3:])
 		files = append(files, types.FileState{
 			Path:   path,

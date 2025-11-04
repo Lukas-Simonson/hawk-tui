@@ -25,30 +25,68 @@ func ApplyHorizontalViewport(line string, scrollOffset, viewportWidth int) strin
 	return result
 }
 
-// FormatStatus returns a styled status indicator
+// FormatStatus returns a styled status indicator with clear staging information
+// Git status format: XY where X=staged, Y=unstaged (space means no change)
 func FormatStatus(status string) string {
-	var style lipgloss.Style
-	var label string
-
-	switch status {
-	case "M", "MM", "AM":
-		style = styles.StatusModified
-		label = status
-	case "A":
-		style = styles.StatusAdded
-		label = status
-	case "D":
-		style = styles.StatusDeleted
-		label = status
-	case "??":
-		style = styles.StatusUntracked
-		label = status
-	default:
-		style = styles.Normal
-		label = status
+	if len(status) == 0 {
+		return ""
 	}
 
-	return style.Render(label)
+	// Pad status to 2 characters if needed
+	for len(status) < 2 {
+		status += " "
+	}
+
+	// Handle special cases
+	if status == "??" {
+		return styles.StatusUntracked.Render("Untracked")
+	}
+
+	var parts []string
+
+	// Parse first character (staged/index status) - space means NOT staged
+	if status[0] != ' ' && status[0] != '?' {
+		switch status[0] {
+		case 'M':
+			parts = append(parts, styles.StatusAdded.Render("Staged"))
+		case 'A':
+			parts = append(parts, styles.StatusAdded.Render("Added"))
+		case 'D':
+			parts = append(parts, styles.StatusDeleted.Render("Staged-Del"))
+		case 'R':
+			parts = append(parts, styles.StatusAdded.Render("Renamed"))
+		case 'C':
+			parts = append(parts, styles.StatusAdded.Render("Copied"))
+		}
+	}
+
+	// Parse second character (working tree/unstaged status) - space means clean
+	if status[1] != ' ' && status[1] != '?' {
+		switch status[1] {
+		case 'M':
+			parts = append(parts, styles.StatusModified.Render("Modified"))
+		case 'D':
+			parts = append(parts, styles.StatusDeleted.Render("Deleted"))
+		case 'A':
+			parts = append(parts, styles.StatusModified.Render("Added-Unstaged"))
+		}
+	}
+
+	// If no parts, show the raw status
+	if len(parts) == 0 {
+		return styles.Normal.Render(status)
+	}
+
+	// Join parts with " + " if both staged and unstaged
+	result := ""
+	for i, part := range parts {
+		if i > 0 {
+			result += " + "
+		}
+		result += part
+	}
+
+	return result
 }
 
 // GetBorderStyle returns the appropriate border style based on focus

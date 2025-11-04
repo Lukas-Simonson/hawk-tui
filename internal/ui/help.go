@@ -49,12 +49,14 @@ General:
   ctrl+c       Quit application
 
 File Status Indicators:
-  M            Modified
-  A            Added (staged)
-  D            Deleted
-  ??           Untracked
-  MM           Modified (staged and unstaged)
-  AM           Added then modified
+  Staged             Changes added to staging area (green)
+  Modified           Unstaged modifications (yellow)
+  Staged + Modified  Both staged and unstaged changes
+  Staged-Del         Deleted and staged (red)
+  Deleted            Deleted but not staged (red)
+  Untracked          New file not tracked by git (orange)
+  Renamed            File has been renamed
+  Copied             File has been copied
 `
 
 	s := styles.Title.Render("🦅 Hawk TUI - Help") + "\n"
