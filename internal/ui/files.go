@@ -11,11 +11,30 @@ import (
 )
 
 // RenderFilesPane renders the files section
-func RenderFilesPane(files []types.FileState, cursor int, focusSection types.FocusSection, filesHScroll, filesVScroll int, err error, width, height int, calculateScrollLimits func() (int, int)) string {
+func RenderFilesPane(files []types.FileState, cursor int, focusSection types.FocusSection, filesHScroll, filesVScroll int, err error, gitStatus types.GitStatusMsg, width, height int, calculateScrollLimits func() (int, int)) string {
 	borderStyle := GetBorderStyle(IsFocused(focusSection, types.FocusFiles))
 
 	var content strings.Builder
-	content.WriteString(styles.Title.Render("Files") + "\n\n")
+	content.WriteString(styles.Title.Render("Files") + "\n")
+
+	// Display git branch and status info
+	if gitStatus.Branch != "" {
+		var statusParts []string
+		statusParts = append(statusParts, fmt.Sprintf("Branch: %s", gitStatus.Branch))
+
+		if gitStatus.Ahead > 0 {
+			statusParts = append(statusParts, fmt.Sprintf("↑%d", gitStatus.Ahead))
+		}
+		if gitStatus.Behind > 0 {
+			statusParts = append(statusParts, fmt.Sprintf("↓%d", gitStatus.Behind))
+		}
+		if gitStatus.Stashed > 0 {
+			statusParts = append(statusParts, fmt.Sprintf("Stash: %d", gitStatus.Stashed))
+		}
+
+		content.WriteString(styles.Help.Render(strings.Join(statusParts, " • ")) + "\n")
+	}
+	content.WriteString("\n")
 
 	if err != nil {
 		content.WriteString(styles.Error.Render(fmt.Sprintf("Error: %v", err)) + "\n\n")

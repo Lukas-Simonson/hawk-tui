@@ -80,6 +80,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case types.GitStatusMsg:
+		m.GitStatus = msg
+		return m, nil
+
 	case types.DiffMsg:
 		m.DiffContent = msg.Content
 		m.DiffScroll = 0
@@ -93,7 +97,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.PopupOutput = msg.Output
 			m.FocusSection = types.FocusPopup
 		}
-		return m, RefreshGitStatus()
+		return m, tea.Batch(RefreshGitStatus(), RefreshGitBranchInfo())
 
 	case types.ErrMsg:
 		m.Err = msg.Err
@@ -206,7 +210,7 @@ func (m Model) updateFileList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.DiffContent = ""
 		m.FilesHScroll = 0
 		m.FilesVScroll = 0
-		return m, RefreshGitStatus()
+		return m, tea.Batch(RefreshGitStatus(), RefreshGitBranchInfo())
 	}
 
 	return m, nil

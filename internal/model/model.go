@@ -30,6 +30,7 @@ type Model struct {
 	DiffHScroll   int // Horizontal scroll offset for diff pane
 	HelpScroll    int // Vertical scroll offset for help screen
 	GitHelpScroll int // Vertical scroll offset for git help screen
+	GitStatus     types.GitStatusMsg // Git branch and status info
 }
 
 // New creates a new model instance
@@ -44,9 +45,14 @@ func New() Model {
 
 // Init initializes the model
 func (m Model) Init() tea.Cmd {
-	return func() tea.Msg {
-		return git.RefreshStatus()
-	}
+	return tea.Batch(
+		func() tea.Msg {
+			return git.RefreshStatus()
+		},
+		func() tea.Msg {
+			return git.GetBranchInfo()
+		},
+	)
 }
 
 // View renders the UI
@@ -73,7 +79,7 @@ func (m Model) View() string {
 	halfWidth := m.Width / 2
 
 	// Render each pane
-	filesPane := ui.RenderFilesPane(m.Files, m.Cursor, m.FocusSection, m.FilesHScroll, m.FilesVScroll, m.Err, halfWidth, topHeight, m.calculateFilesScrollLimits)
+	filesPane := ui.RenderFilesPane(m.Files, m.Cursor, m.FocusSection, m.FilesHScroll, m.FilesVScroll, m.Err, m.GitStatus, halfWidth, topHeight, m.calculateFilesScrollLimits)
 	diffPane := ui.RenderDiffPane(m.Files, m.Cursor, m.FocusSection, m.DiffContent, m.DiffScroll, m.DiffHScroll, halfWidth, topHeight, m.calculateDiffScrollLimits)
 	commandPane := ui.RenderCommandPane(m.FocusSection, m.CommandInput, m.Width, commandHeight)
 
@@ -173,5 +179,12 @@ func (m Model) ExecuteCommand() tea.Cmd {
 func RefreshGitStatus() tea.Cmd {
 	return func() tea.Msg {
 		return git.RefreshStatus()
+	}
+}
+
+// RefreshGitBranchInfo returns a command to refresh the git branch info
+func RefreshGitBranchInfo() tea.Cmd {
+	return func() tea.Msg {
+		return git.GetBranchInfo()
 	}
 }

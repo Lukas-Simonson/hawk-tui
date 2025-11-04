@@ -200,3 +200,43 @@ func IsGitRepository() bool {
 	cmd := exec.Command("git", "rev-parse", "--git-dir")
 	return cmd.Run() == nil
 }
+
+// GetBranchInfo returns information about the current git branch
+func GetBranchInfo() types.GitStatusMsg {
+	var status types.GitStatusMsg
+
+	// Get current branch name
+	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	output, err := cmd.Output()
+	if err != nil {
+		status.Branch = "unknown"
+		return status
+	}
+	status.Branch = strings.TrimSpace(string(output))
+
+	// Get ahead/behind status
+	cmd = exec.Command("git", "rev-list", "--left-right", "--count", "@{upstream}...HEAD")
+	output, err = cmd.Output()
+	if err == nil {
+		// Output format: "behind\tahead\n"
+		parts := strings.Fields(string(output))
+		if len(parts) >= 2 {
+			fmt.Sscanf(parts[0], "%d", &status.Behind)
+			fmt.Sscanf(parts[1], "%d", &status.Ahead)
+		}
+	}
+
+	// Get stash count
+	cmd = exec.Command("git", "stash", "list")
+	output, err = cmd.Output()
+	if err == nil {
+		lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+		if len(lines) == 1 && lines[0] == "" {
+			status.Stashed = 0
+		} else {
+			status.Stashed = len(lines)
+		}
+	}
+
+	return status
+}

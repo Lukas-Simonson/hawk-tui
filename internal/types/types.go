@@ -43,3 +43,10 @@ type CommitRequest struct {
 	Message string
 	Flags   string
 }
+
+type GitStatusMsg struct {
+	Branch  string
+	Ahead   int
+	Behind  int
+	Stashed int
+}
