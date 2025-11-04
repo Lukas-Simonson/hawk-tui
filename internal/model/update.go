@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strconv"
 	"strings"
 
 	"hawk-tui/internal/git"
@@ -205,7 +206,8 @@ func (m Model) updateFileList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			if m.CommandInput != "" && !strings.HasSuffix(m.CommandInput, " ") {
 				m.CommandInput += " "
 			}
-			m.CommandInput += file.Path
+			// Quote the path if it contains spaces or special characters
+			m.CommandInput += quotePathIfNeeded(file.Path)
 			m.FocusSection = types.FocusCommand
 		}
 
@@ -590,4 +592,23 @@ func (m Model) updateCommitPopup(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+// quotePathIfNeeded quotes a file path if it contains spaces or special characters
+func quotePathIfNeeded(path string) string {
+	// Check if path contains characters that need quoting
+	needsQuoting := false
+	for _, char := range path {
+		if char == ' ' || char == '\t' || char == '\n' || char == '"' || char == '\'' || char == '\\' {
+			needsQuoting = true
+			break
+		}
+	}
+
+	if needsQuoting {
+		// Use strconv.Quote to properly escape the path
+		return strconv.Quote(path)
+	}
+
+	return path
 }

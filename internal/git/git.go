@@ -97,7 +97,7 @@ func GetDiff(file types.FileState) types.DiffMsg {
 		}
 		// Show content with line numbers
 		cmd = exec.Command("cat", "-n", file.Path)
-	case "A", "AM":
+	case "A", "AM", "A ":
 		// New file - show colorized diff
 		cmd = exec.Command("git", "diff", "--color=always", "--cached", file.Path)
 		shouldFilter = true
@@ -117,6 +117,9 @@ func GetDiff(file types.FileState) types.DiffMsg {
 		}
 		cmd = exec.Command("cat", "-n", file.Path)
 		shouldFilter = false
+	case "D ", " D", "DD":
+		// Deleted file
+		return types.DiffMsg{Content: fmt.Sprintf("File deleted: %s", file.Path)}
 	default:
 		// Modified file - show colorized diff
 		cmd = exec.Command("git", "diff", "--color=always", "HEAD", file.Path)
@@ -148,7 +151,10 @@ func GetDiff(file types.FileState) types.DiffMsg {
 
 // ExecuteCommand executes a git command and returns the output
 func ExecuteCommand(input string) types.CommandOutputMsg {
-	parts := strings.Fields(input)
+	parts, err := splitCommandArgs(input)
+	if err != nil {
+		return types.CommandOutputMsg{Output: fmt.Sprintf("Error parsing command: %v", err)}
+	}
 	if len(parts) == 0 {
 		return types.CommandOutputMsg{Output: "No command entered"}
 	}
@@ -165,6 +171,65 @@ func ExecuteCommand(input string) types.CommandOutputMsg {
 	}
 
 	return types.CommandOutputMsg{Output: result}
+}
+
+// splitCommandArgs splits a command string into arguments, respecting quoted strings
+func splitCommandArgs(input string) ([]string, error) {
+	var args []string
+	var current strings.Builder
+	inQuote := false
+	quoteChar := rune(0)
+	runes := []rune(input)
+
+	for i := 0; i < len(runes); i++ {
+		char := runes[i]
+
+		switch {
+		case char == '"' || char == '\'':
+			if !inQuote {
+				// Start of quoted string
+				inQuote = true
+				quoteChar = char
+			} else if char == quoteChar {
+				// End of quoted string
+				inQuote = false
+				quoteChar = 0
+			} else {
+				// Different quote char while in quote
+				current.WriteRune(char)
+			}
+		case char == '\\' && inQuote && i+1 < len(runes):
+			// Handle escape sequences in quotes
+			next := runes[i+1]
+			if next == quoteChar || next == '\\' {
+				// Skip the backslash and add the escaped character
+				current.WriteRune(next)
+				i++ // Skip the next character
+			} else {
+				current.WriteRune(char)
+			}
+		case char == ' ' || char == '\t':
+			if inQuote {
+				current.WriteRune(char)
+			} else if current.Len() > 0 {
+				args = append(args, current.String())
+				current.Reset()
+			}
+		default:
+			current.WriteRune(char)
+		}
+	}
+
+	// Add last argument
+	if current.Len() > 0 {
+		args = append(args, current.String())
+	}
+
+	if inQuote {
+		return nil, fmt.Errorf("unclosed quote in command")
+	}
+
+	return args, nil
 }
 
 // ExecuteCommit executes a git commit with the given message and flags
