@@ -1,4 +1,4 @@
-# Hawk TUI - Git Repository Viewer
+# Hawk TUI (Git On That Thang)
 
 A beautiful terminal user interface for viewing and managing git repositories, built with Go and Bubble Tea.
 
