@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 
+	"hawk-tui/internal/audio"
 	"hawk-tui/internal/git"
 	"hawk-tui/internal/types"
 
@@ -360,6 +361,13 @@ func (m Model) updateCommand(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "enter":
 		if m.CommandInput != "" {
 			input := strings.TrimSpace(m.CommandInput)
+
+			// Check if user is based
+			if input == "tuah" {
+				go audio.PlaySound("assets/hawk_tuah.mp3")
+				m.CommandInput = ""
+				return m, nil
+			}
 
 			// Check if this is the help command
 			if input == "help" {
