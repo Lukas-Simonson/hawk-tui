@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"os"
 
+	"hawk-tui/internal/audio"
 	"hawk-tui/internal/git"
 	"hawk-tui/internal/model"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/faiface/beep"
 )
 
 func main() {
@@ -16,6 +18,9 @@ func main() {
 		fmt.Println("Error: Not a git repository")
 		os.Exit(1)
 	}
+
+	// Warm up and initialize speaker
+	audio.WarmUpSpeaker(beep.SampleRate(44100))
 
 	// Create and run the program
 	p := tea.NewProgram(model.New(), tea.WithAltScreen())
